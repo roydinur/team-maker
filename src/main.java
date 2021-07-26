@@ -56,8 +56,8 @@ public class main {
             if (ans == 1) {
                 teams.add(createTeam());
             } else if (ans == 2) {
-                if(teams.isEmpty()){
-                    System.out.println("no teams to edit"+ "\n");
+                if (teams.isEmpty()) {
+                    System.out.println("no teams to edit" + "\n");
                     break;
                 }
                 System.out.println("""
@@ -80,7 +80,7 @@ public class main {
         String teamName = scanner.next();
         Team newTeam = new Team(teamName);
         do {
-            newTeam.addplayer();
+            newTeam.addPlayer();
             System.out.println("Enter '0' if you've finish adding players, or any other key otherwise");
         } while (!scanner.next().equals("0"));
         return newTeam;
@@ -88,7 +88,7 @@ public class main {
 
     private static void editTeam(List<Team> teams, Team team) {
         while (true) {
-            System.out.println("Editing: "+team.name+"\n"+
+            System.out.println("Editing: " + team.name + "\n" +
                     """
                             Add player - 1
                             Edit player - 2
@@ -100,11 +100,11 @@ public class main {
             Scanner scanner = new Scanner(System.in);
             int ans = scanner.nextInt();
             if (ans == 1) {
-                team.addplayer();
+                team.addPlayer();
             } else if (ans == 2) {
                 System.out.println("choose which player to edit:");
                 System.out.println(team.players.toString());
-                editPlayer(team, team.players.get(scanner.nextInt()-1));
+                editPlayer(team, team.players.get(scanner.nextInt() - 1));
             } else if (ans == 3) {
                 System.out.println("are you sure you wish to delete this team? enter 'y' for 'yes' or any other key for 'no'");
                 if (scanner.next().equals("y")) {
@@ -119,7 +119,7 @@ public class main {
 
     private static void editPlayer(Team team, Player player) {
         while (true) {
-            System.out.println("Editing: "+player.name +" "+ player.rank+ " stars :"+"\n"+
+            System.out.println("Editing: " + player.getName() + " " + player.rank + " stars :" + "\n" +
 
                     """
                             Edit player's name - 1
@@ -131,18 +131,15 @@ public class main {
             System.out.println("enter number between 1-4");
             Scanner scanner = new Scanner(System.in);
             int ans = scanner.nextInt();
-            if(ans==1){
+            if (ans == 1) {
                 System.out.println("enter new name:");
-                player.editName(scanner.next());
-            }
-            else if(ans==2){
+                player.setName(scanner.next());
+            } else if (ans == 2) {
                 System.out.println("enter new rank:");
-                player.editRank(scanner.nextDouble());
-            }
-            else if(ans==3){
+                player.setRank(scanner.nextDouble());
+            } else if (ans == 3) {
                 team.players.remove(player);
-            }
-            else if(ans == 4){
+            } else if (ans == 4) {
                 break;
             }
 
