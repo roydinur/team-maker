@@ -26,7 +26,7 @@ public class Team {
             System.out.println("Player has been added");
         }
         else System.out.println("Player with that name already exist");
-s
+
     }
 
     public void removePlayer(String name){
