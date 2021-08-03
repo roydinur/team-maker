@@ -2,11 +2,11 @@ public class Player {
 //    TODO: private + getter + setters
 //    TODO: id (also to team)
     private String name;
-    protected double rank;
+    private double rank;
 
     public Player(String name, double rank) {
         this.name = name;
-        this.rank = rank;
+        this.rank = round(rank,2);
     }
 
     public Player(String name) {
@@ -19,33 +19,35 @@ public class Player {
     }
 
     public void setName(String name) {
-        this.name = name;
+        if (name.length() < 1 || name.length() > 20) {
+            System.out.println("Name length needs to between 1-20 characters");
+        } else {
+            this.name = name;
+        }
     }
-
     public double getRank() {
         return rank;
     }
 
     public void setRank(double rank) {
-        this.rank = rank;
-    }
+        if (rank < 0 || rank > 5) {
+            System.out.println("Rank needs to be between 0 to 5");
+        } else {
+            this.rank = round(rank, 2);
 
-//    // TODO: setRank
-//    public void editRank(double newRank) {
-////        if (newRank < 0 || newRank > 5) {
-////            throw new IllegalArgumentException("Rank needs to be between 0 to 5");
-////        }
-//        this.rank = newRank;
-//    }
-//
-//    public void editName(String newName) {
-////        if(newName.length()< 1 || newName.length()>20)
-////            throw new IllegalArgumentException("Name length needs to between 1-20 characters");
-//        this.name = newName;
-//    }
+        }
+    }
+    private static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
+    }
 
     @Override
     public String toString() {
-        return name;
+        return (name+" "+this.getRank());
     }
 }
