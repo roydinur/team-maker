@@ -1,3 +1,7 @@
+import classes.Player;
+import classes.Squad;
+import utils.Generator;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -7,7 +11,7 @@ public class main {
 
     public static void main(String[] args) {
         List<Squad> squadList = new ArrayList<>();
-        Squad dinur = new Squad("dinur");
+        Squad dinur = new Squad("dinur",squadList);
         Player roy = new Player("roy", 3.5);
         Player tom = new Player("tom", 3.5456456);
         Player amit = new Player("amit", 4.5);
@@ -18,21 +22,22 @@ public class main {
         dinur.getPlayers().add(barak);
         squadList.add(dinur);
 
-        Squad randomSquad = new Squad("random");
+        Squad randomSquad = new Squad("random",squadList);
         for (int i = 0; i < 20; i++) {
-            String name = Generator.generateRandomPassword(5);
+            String name = Generator.generateName(5);
             Random rnd = new Random();
             double num = rnd.nextDouble() * 5;
             Player temp = new Player(name, num);
             randomSquad.getPlayers().add(temp);
         }
         squadList.add(randomSquad);
-        randomSquad.match(4);
+//        randomSquad.match(4);
 
         while (true) {
             System.out.println(
                     """
-                            \nWelcome to Team-Maker!
+                                                        
+                            Welcome to Team-Maker!
 
                             Create new match - 1
                             Manage squads - 2
@@ -58,40 +63,47 @@ public class main {
     private static void matchMenu(List<Squad> squadList) {
         while (true) {
             boolean squadExist = !squadList.isEmpty();
-            int num = 1;
-            System.out.println("\n" + "Choose squad:" + "\n");
+            System.out.println("""
+
+                    Match Menu:
+                    """);
             if (squadExist) {
-                System.out.println("Choose existing squad - 1" + "\n" +
-                        "Create new squad - 2" + "\n" +
-                        "Return - 3" + "\n" + "\n" +
-                        "Enter number between 1-3");
+                System.out.println("""
+                        Choose existing squad - 1
+                        Create new squad - 2
+                        Return - 3
+
+                        Enter number between 1-3""");
                 Scanner scanner = new Scanner(System.in);
                 int ans = scanner.nextInt();
                 if (ans == 1) {
                     System.out.println("""
 
-                            Choose the number of the squad, you wish to match:
+                            Choose the number of the squad, you wish to play:
                             """);
                     int index = 1;
                     for (Squad s : squadList) {
                         System.out.println(String.valueOf(index++) + ": " + s);
                     }
-                    int i = scanner.nextInt();
-                    createMatch(squadList.get(i - 1));
+                    int i = scanner.nextInt() - 1;
+                    createMatch(squadList.get(i),squadList);
                 } else if (ans == 2) {
-                    Squad squad = createSquad();
-                    squadList.add(squad);
+                    Squad newSquad = createSquad(squadList);
+                    squadList.add(newSquad);
+                    createMatch(newSquad,squadList);
                 } else if (ans == 3) {
                     break;
                 }
             } else {
-                System.out.println("Create new squad - 1" + "\n" +
-                        "Return - 2" + "\n" + "\n" +
-                        "Enter number between 1-2");
+                System.out.println("""
+                        Create new squad - 1
+                        Return - 2
+
+                        Enter number between 1-2""");
                 Scanner scanner = new Scanner(System.in);
                 int ans = scanner.nextInt();
                 if (ans == 1) {
-                    Squad squad = createSquad();
+                    Squad squad = createSquad(squadList);
                     squadList.add(squad);
                 } else if (ans == 2) {
                     break;
@@ -102,18 +114,70 @@ public class main {
     }
 
     //todo: create Match
-    private static void createMatch(Squad squad) {
-        int numOfTeams = numOfTeams(squad);
+    private static void createMatch(Squad squad,List<Squad> squadList) {
+        Squad participatingSquad = participatingPlayers(squad,squadList);
+        int numOfTeams = numOfTeams(participatingSquad);
         if (numOfTeams > 1) {
-            squad.match(numOfTeams);
+            participatingSquad.match(numOfTeams);
+        } else {
+            System.out.println("Team 1:");
+            participatingSquad.printSquad();
         }
-        else squad.printSquad();
     }
+    // todo: make it more easy to choose participating players
+
+    private static Squad participatingPlayers(Squad squad,List<Squad> squadList) {
+        Squad participatingSquad = new Squad("participating",squadList);
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("Enter the number of players who will participate in the match:" +
+                    "or type 'all' for all squad");
+            String ans = scanner.next();
+            if (ans.equals("all") || ans.equals("All") || ans.equals("ALL")) {
+                return squad;
+            } else if (isNumeric(ans)) {
+                int numberOfPlayers = Integer.parseInt(ans);
+                if (numberOfPlayers < 1 || numberOfPlayers > squad.getSize()) {
+                    System.out.println("The number that was entered is not in range" + "\n");
+                } else {
+                    int index = 1;
+                    for (Player s : squad.getPlayers()) {
+                        System.out.println(String.valueOf(index++) + ": " + s);
+                    }
+                    int[] playersChosen = new int[squad.getSize()];
+                    for (int i = 0; i < numberOfPlayers; i++) {
+                        System.out.println("Enter next player participating number:");
+                        int playerIndex = scanner.nextInt() - 1;
+                        if (playersChosen[playerIndex] != 0) {
+                            System.out.println("Player was already chosen");
+                            i--;
+                        } else {
+                            playersChosen[playerIndex] = 1;
+                            Player playerToAdd = squad.getPlayers().get(playerIndex);
+                            participatingSquad.getPlayers().add(playerToAdd);
+                            System.out.println(playerToAdd.getName() + " was added to participating team");
+                        }
+                    }
+                    return participatingSquad;
+                }
+            }
+        }
+    }
+
+    private static boolean isNumeric(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
 
 //    todo: change number of teams you're allowed to choose
 
     private static int numOfTeams(Squad squad) {
-        int squadSize = squad.getPlayers().size();
+        int squadSize = squad.getSize();
         int ans;
         if (squadSize == 1) {
             return 1;
@@ -138,7 +202,8 @@ public class main {
         while (true) {
             System.out.println(
                     """ 
-                            \nManage Squads:
+                                                        
+                            Manage Squads:
                                                         
                             Create new squad - 1
                             Edit squad - 2
@@ -149,7 +214,9 @@ public class main {
             int ans = scanner.nextInt();
 
             if (ans == 1) {
-                squadList.add(createSquad());
+                Squad squadToAdd = createSquad(squadList);
+                squadList.add(squadToAdd);
+                System.out.println(squadToAdd.getName() + " was added to the squad list");
             } else if (ans == 2) {
                 if (squadList.isEmpty()) {
                     System.out.println("No squads to edit" + "\n");
@@ -159,39 +226,32 @@ public class main {
 
                         Choose the number of squad you wish to edit:
                         """);
-                int index = 0;
+                int index = 1;
                 for (Squad s : squadList) {
                     System.out.println(String.valueOf(index++) + ": " + s);
                 }
-                int squad = scanner.nextInt();
-                editSquad(squadList, squadList.get(squad));
+                int squadIndex = scanner.nextInt() - 1;
+                editSquad(squadList, squadList.get(squadIndex));
             } else if (ans == 3) {
                 break;
             }
         }
     }
 
-    private static Squad createSquad() {
+    private static Squad createSquad(List<Squad> squadList) {
 
         Scanner scanner = new Scanner(System.in);
-        System.out.println("\n" + "Enter squad's name:");
-        String squadName = scanner.next();
-        Squad newSquad = new Squad(squadName);
-        boolean first = true;
+            System.out.println("\n" + "Enter squad's name:");
+            String squadName = scanner.next();
+        Squad newSquad = new Squad(squadName,squadList);
         while (true) {
-            if (first) {
-                System.out.println("Do you wish to add players for the squad?" + "\n" +
-                        "Enter 'n' for no, or type the first player's name:");
-                first = false;
-            } else {
-                System.out.println("Do you wish to add more players for the squad?" + "\n" +
-                        "Enter 'n' for no, or type next player's name:");
-            }
+            System.out.println("Do you wish to add players to the squad?" + "\n" +
+                    "Enter 'y' for yes, or 'n' for no:");
             String ans = scanner.next();
             if (ans.equals("n")) {
                 break;
-            } else {
-                newSquad.addPlayer(ans);
+            } else if (ans.equals("y")) {
+                newSquad.addPlayer();
             }
         }
         return newSquad;
@@ -214,11 +274,11 @@ public class main {
                 squad.addPlayer();
             } else if (ans == 2) {
                 System.out.println("Choose which player to edit:");
-                int index = 0;
+                int index = 1;
                 for (Player s : squad.getPlayers()) {
                     System.out.println(String.valueOf(index++) + ": " + s);
                 }
-                editPlayer(squad, squad.getPlayers().get(scanner.nextInt()));
+                editPlayer(squad, squad.getPlayers().get(scanner.nextInt() - 1));
             } else if (ans == 3) {
                 System.out.println("Are you sure you want to delete this squad? enter 'y' for 'yes' or any other key for 'no'");
                 if (scanner.next().equals("y")) {
@@ -247,7 +307,7 @@ public class main {
             int ans = scanner.nextInt();
             if (ans == 1) {
                 System.out.println("enter new name:");
-                player.setName(scanner.next());
+                player.setName(scanner.next(),squad);
             } else if (ans == 2) {
                 System.out.println("enter new rank:");
                 player.setRank(scanner.nextDouble());

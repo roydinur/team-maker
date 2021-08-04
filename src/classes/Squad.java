@@ -1,3 +1,5 @@
+package classes;
+
 import java.util.*;
 
 public class Squad {
@@ -5,8 +7,18 @@ public class Squad {
     private final List<Player> players = new ArrayList<>();
     private String name;
 
-    public Squad(String name) {
-        this.name = name;
+    public Squad(String name,List<Squad> squadList) {
+        while (true) {
+            if (teamNameLegal(name, squadList)) {
+                this.name = name;
+                break;
+            }
+            else{
+                System.out.println("Enter legal squad name:");
+                Scanner scanner = new Scanner(System.in);
+                name = scanner.next();
+            }
+        }
     }
 
     public List<Player> getPlayers() {
@@ -17,92 +29,127 @@ public class Squad {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(String name, List<Squad> squadList) {
+        while (true) {
+            if(name.equals(this.name)){
+                break;
+            }
+            else if (teamNameLegal(name, squadList)) {
+                this.name = name;
+                System.out.println("Name has been changed");
+                break;
+            }
+            else {
+                System.out.println("Enter legal team name:");
+                Scanner scanner = new Scanner(System.in);
+                name = scanner.next();
+            }
+
+        }
+    }
+
+    private boolean teamNameLegal(String name, List<Squad> squadList) {
         if (name.length() < 1 || name.length() > 20) {
             System.out.println("Name length needs to between 1-20 characters");
-        } else {
-            this.name = name;
-            System.out.println("Name has been changed");
-        }
+            return false;
+        } else if (squadList.stream().anyMatch(squad -> squad.getName().equals(name))) {
+            System.out.println("A squad with that name already exist");
+            return false;
+        } else return true;
+    }
 
+    public int getSize() {
+        return players.size();
     }
 
     public void addPlayer() {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Enter player's name:");
-        String name = scanner.next();
-        boolean isPlayerWithNameExist = players.stream().anyMatch(player -> player.getName().equals(name));
-        if (!isPlayerWithNameExist) {
+        String playerName;
+        double rank;
+        do {
+            System.out.println("Enter player's name:");
+            playerName = scanner.next();
+        } while (!playerNameLegal(playerName));
+        do {
             System.out.println("Enter player's rank 0-5:");
-            double rank = scanner.nextDouble();
-            Player newPlayer = new Player(name, rank);
-            players.add(newPlayer);
-            System.out.println("Player has been added" + "\n");
-        } else System.out.println("Player with that name already exist" + "\n");
+            rank = scanner.nextDouble();
+        } while (!rankInRange(rank));
+        Player newPlayer = new Player(playerName, rank);
+        players.add(newPlayer);
+        System.out.println("Player has been added" + "\n");
+
     }
 
-    public void addPlayer(String name) {
-        Scanner scanner = new Scanner(System.in);
-        boolean isPlayerWithNameExist = players.stream().anyMatch(player -> player.getName().equals(name));
-        if (!isPlayerWithNameExist) {
-            System.out.println("Enter player's rank 0-5:");
-            double rank = scanner.nextDouble();
-            Player newPlayer = new Player(name, rank);
-            players.add(newPlayer);
-            System.out.println("Player has been added" + "\n");
-        } else System.out.println("Player with that name already exist" + "\n");
+    private boolean playerNameLegal(String playerName) {
+        if (name.length() < 1 || name.length() > 20) {
+            System.out.println("Name length needs to between 1-20 characters");
+            return false;
+        } else if (players.stream().anyMatch(player -> player.getName().equals(playerName))) {
+            System.out.println("Player with that name already exist in the squad");
+            return false;
+        } else {
+            return true;
+        }
     }
 
+
+    private boolean rankInRange(double rank) {
+        if (rank >= 0 && rank <= 5) {
+            return true;
+        } else {
+            System.out.println("The rank submitted is not in legal range");
+            return false;
+        }
+    }
 
     public void removePlayer(Player player) {
         players.remove(player);
         System.out.println("Player has been removed from squad" + "\n");
     }
 
-    // gets n - number of teams
-    // prints n equals teams
-    public void match(int n) {
-        List<List<Player>> equalTeams = randomTeams(n);
+    public List<List<Player>> match(int numOfTeams) {
+        List<List<Player>> equalTeams = initTeams(numOfTeams);
         double dif = maxDiff(equalTeams);
-        List<List<Player>> mutation = clone(equalTeams);
-        mutate(mutation);
-        int countNotImproved = 0;
-        while (countNotImproved < 15) {
-            double mutatedDiff = maxDiff(mutation);
+        List<List<Player>> mutatedTeam = clone(equalTeams);
+        mutate(mutatedTeam);
+        int iterationsWithoutImprovementsCount = 0;
+        while (iterationsWithoutImprovementsCount < 15) {
+            double mutatedDiff = maxDiff(mutatedTeam);
             if (mutatedDiff < dif) {
-                countNotImproved = 0;
-                equalTeams = mutation;
+                iterationsWithoutImprovementsCount = 0;
+                equalTeams = mutatedTeam;
                 dif = mutatedDiff;
 
             } else {
-                countNotImproved++;
+                iterationsWithoutImprovementsCount++;
             }
-            mutation = clone(equalTeams);
-            mutate(mutation);
+            mutatedTeam = clone(equalTeams);
+            mutate(mutatedTeam);
         }
         int index = 1;
         for (List<Player> team : equalTeams) {
             System.out.println("Team " + String.valueOf(index++) + " :");
             printSquad(team);
-            System.out.println("average = " + round(averageRank(team),2) + "\n");
+            System.out.println("average = " + round(averageRank(team), 2) + "\n");
         }
+        return equalTeams;
 
     }
 
     // generates n random teams out of the squad:
-    private List<List<Player>> randomTeams(int n) {
+    private List<List<Player>> initTeams(int n) {
         List<List<Player>> teams = new ArrayList<>();
-        int m = getPlayers().size() / n;
+        int numOfPlayersInTeam = getSize() / n;
         for (int i = 0; i < n; i++) {
             List<Player> team = new ArrayList<>();
-            for (int j = 0; j < m; j++) {
-                team.add(getPlayers().get(j + i * m));
+            for (int j = 0; j < numOfPlayersInTeam; j++) {
+                team.add(getPlayers().get(j + i * numOfPlayersInTeam));
             }
             teams.add(team);
         }
         return teams;
     }
-    //todo: no use
+
     //returns the average rank of player in the team:
     private double averageRank(List<Player> team) {
         double sum = 0;
@@ -153,20 +200,14 @@ public class Squad {
         team2.add(player1);
     }
 
-    private List<List<Player>> clone(List<List<Player>> original){
+    private List<List<Player>> clone(List<List<Player>> original) {
         List<List<Player>> clone = new ArrayList<>();
-        for (List<Player> team : original){
+        for (List<Player> team : original) {
             List<Player> t = new ArrayList<>(team);
             clone.add(t);
         }
         return clone;
     }
-//    //todo: no use for now
-//    private List<Player> getSortedSquad() {
-//        List<Player> cloned = new ArrayList(getPlayers());
-//        cloned.sort(new RankSort());
-//        return cloned;
-//    }
 
     public void printSquad(List<Player> squad) {
         int index = 1;

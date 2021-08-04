@@ -1,8 +1,9 @@
+package utils;
 
 import java.util.Random;
 
 public class Generator {
-    public static String generateRandomPassword(int len) {
+    public static String generateName(int len) {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijk"
                 + "lmnopqrstuvwxyz";
         Random rnd = new Random();
